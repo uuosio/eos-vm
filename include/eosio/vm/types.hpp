@@ -141,24 +141,24 @@ namespace eosio { namespace vm {
    using wasm_code_ptr = guarded_ptr<uint8_t>;
 
    struct module {
-      growable_allocator               allocator = {constants::initial_module_size};
-      uint32_t                         start = 0;
-      guarded_vector<func_type>        types     = {allocator, 0};
-      guarded_vector<import_entry>     imports   = {allocator, 0};
-      guarded_vector<uint32_t>         functions = {allocator, 0};
-      guarded_vector<table_type>       tables    = {allocator, 0};
-      guarded_vector<memory_type>      memories  = {allocator, 0};
-      guarded_vector<global_variable>  globals   = {allocator, 0};
-      guarded_vector<export_entry>     exports   = {allocator, 0};
-      guarded_vector<elem_segment>     elements  = {allocator, 0};
-      guarded_vector<function_body>    code      = {allocator, 0};
-      guarded_vector<data_segment>     data      = {allocator, 0};
+      maybe_allocator<growable_allocator> allocator = growable_allocator::init( constants::initial_module_size );
+      uint32_t                            start     = 0;
+      guarded_vector<func_type>           types;
+      guarded_vector<import_entry>        imports;
+      guarded_vector<uint32_t>            functions;
+      guarded_vector<table_type>          tables;
+      guarded_vector<memory_type>         memories;
+      guarded_vector<global_variable>     globals;
+      guarded_vector<export_entry>        exports;
+      guarded_vector<elem_segment>        elements;
+      guarded_vector<function_body>       code;
+      guarded_vector<data_segment>        data;
 
       // not part of the spec for WASM
-      guarded_vector<uint32_t> import_functions = {allocator, 0};
-      guarded_vector<uint32_t> function_sizes   = {allocator, 0};
+      guarded_vector<uint32_t> import_functions;
+      guarded_vector<uint32_t> function_sizes;
 
-      uint32_t get_imported_functions_size()const {
+      uint32_t get_imported_functions_size() const {
          uint32_t number_of_imports = 0;
          for (int i=0; i < imports.size(); i++) {
             if (imports[i].kind == external_kind::Function)

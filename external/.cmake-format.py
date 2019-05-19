@@ -1,0 +1,10 @@
+line_width = 120
+tab_size = 3
+max_subargs_per_line = 6
+separate_ctrl_name_with_space = True
+separate_fn_name_with_space = True
+command_case = 'lower'
+keyword_case = 'upper'
+autosort = True
+hashruler_min_length = 5
+canonicalize_hashrulers = True

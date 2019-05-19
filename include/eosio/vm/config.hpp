@@ -7,3 +7,9 @@ inline constexpr bool should_align_memory_ops = true;
 inline constexpr bool should_align_memory_ops = false;
 #endif
 
+// use Boost
+#ifdef EOS_VM_USE_BOOST
+inline constexpr bool should_use_boost = true;
+#else
+inline constexpr bool should_use_boost = false;
+#endif

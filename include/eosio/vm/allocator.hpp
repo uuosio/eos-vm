@@ -32,8 +32,18 @@ namespace eosio { namespace vm {
    /// Type to house global registration of allocators for signal handling purposes.
    struct allocator_registration {
       using allocator_memory_range = std::tuple<uintptr_t, size_t, jmp_buf>;
-
-      static std::unordered_set<allocator_memory_range> allocators_regions;
+      struct allocator_memory_range_compare {
+         bool operator()(const allocator_memory_range& lhs, const allocator_memory_range& rhs) const {
+            return ((std::get<0>(lhs) == std::get<0>(rhs)) && (std::get<1>(lhs) == std::get<1>(rhs)));
+         }
+      };
+      struct allocator_memory_range_hasher {
+         bool operator()(const allocator_memory_range& amr) const {
+            return std::hash<uintptr_t>()(std::get<0>(amr)) ^ std::hash<size_t>()(std::get<1>(amr));
+         }
+      };
+      static std::unordered_set<allocator_memory_range, allocator_memory_range_hasher, allocator_memory_range_compare>
+            allocators_regions;
 
       template <typename Allocator>
       static void register_allocator(Allocator&& allocator) {
@@ -45,19 +55,20 @@ namespace eosio { namespace vm {
          allocators_regions.erase({ allocator.get_base_address(), allocator.get_max_size(), jmp_buf{} });
       }
 
-      static std::optional<allocator_memory_range&> get(uintptr_t address) {
+      static allocator_memory_range* get(uintptr_t address) {
          for (auto& amr : allocators_regions)
             if (std::get<0>(amr) <= address && address < (std::get<0>(amr) + std::get<1>(amr)))
-               return amr;
-         return {};
+               return (allocator_memory_range*)&amr;
+         return nullptr;
       }
    };
 
    [[noreturn]] void default_wasm_segfault_handler(int sig, siginfo_t* siginfo, void*) {
-      if (const auto& amr = allocator_registration::get(siginfo.si_address))
-         longjmp(std::get<2>(amr), 1);
+      if (auto* amr = allocator_registration::get((uintptr_t)siginfo->si_addr))
+         longjmp(std::get<2>(*amr), 1);
       else
          raise(sig);
+      throw;
    }
 
    outcome::result<result_void> setup_signal_handler() {
@@ -67,13 +78,14 @@ namespace eosio { namespace vm {
       sa.sa_flags = SA_NODEFER | SA_SIGINFO;
       sigaction(SIGSEGV, &sa, NULL);
       sigaction(SIGBUS, &sa, NULL);
+      return result_void{};
    }
 
    class bounded_allocator {
     public:
-      static outcome::result<bounded_allocator&&> init(size_t sz) {
+      static outcome::result<bounded_allocator> init(size_t sz) {
          bounded_allocator ba(sz);
-         if (LIKELY(_valid))
+         if (LIKELY(ba._valid))
             return std::move(ba);
          return system_errors::constructor_failure;
       }
@@ -90,11 +102,12 @@ namespace eosio { namespace vm {
       outcome::result<result_void> free() {
          EOS_VM_ASSERT(_index > 0, memory_errors::double_free);
          _index = 0;
+         return result_void{};
       }
 
       void reset() { _index = 0; }
 
-      uintptr_t get_base_address() const { return _raw.get(); }
+      uintptr_t get_base_address() const { return (uintptr_t)_raw.get(); }
       size_t    get_max_size() const { return _size; }
 
     private:
@@ -116,9 +129,9 @@ namespace eosio { namespace vm {
       static constexpr size_t align_amt       = 16;
       static constexpr size_t align_offset(size_t offset) { return (offset + align_amt - 1) & ~(align_amt - 1); }
 
-      static outcome::result<growable_allocator&&> init(size_t sz) {
+      static outcome::result<growable_allocator> init(size_t sz) {
          growable_allocator ga(sz);
-         if (LIKELY(_valid))
+         if (LIKELY(ga._valid))
             return std::move(ga);
          return system_errors::constructor_failure;
       }
@@ -144,19 +157,19 @@ namespace eosio { namespace vm {
          return ptr;
       }
 
-      void free() { EOS_VM_ASSERT(false, system_errors::unimplemented_failure); }
+      outcome::result<result_void> free() { EOS_VM_ASSERT(false, system_errors::unimplemented_failure); }
 
       void reset() { _offset = 0; }
 
     private:
       // size in bytes
-      growable_allocator(size_t size, bool& failed) : _size((size / chunk_size)) {
+      growable_allocator(size_t size) : _size((size / chunk_size)) {
          _base  = (char*)mmap(NULL, max_memory_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-         failed = _base == MAP_FAILED;
+         _valid = _base == MAP_FAILED;
          if (size != 0) {
             size_t chunks_to_alloc = (size / chunk_size) + 1;
             _size += (chunk_size * chunks_to_alloc);
-            failed |= mprotect((char*)_base, _size, PROT_READ | PROT_WRITE) == -1;
+            _valid |= mprotect((char*)_base, _size, PROT_READ | PROT_WRITE) == -1;
          }
       }
 
@@ -173,49 +186,64 @@ namespace eosio { namespace vm {
       char*   _previous = _raw;
       int32_t _page     = 0;
 
-      wasm_allocator() {}
+      wasm_allocator() {
+         // set_up_signals();
+         _raw      = (char*)mmap(NULL, max_memory, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+         _previous = _raw;
+         mprotect(_raw, 1 * page_size, PROT_READ | PROT_WRITE);
+         _page = 1;
+      }
 
     public:
       template <typename T>
-      T* alloc(size_t size = 1 /*in pages*/) {
-         EOS_WB_ASSERT(page + size <= max_pages, wasm_bad_alloc, "exceeded max number of pages");
-         mprotect(raw + (page_size * page), (page_size * size), PROT_READ | PROT_WRITE);
+      T* alloc(size_t size) {
+         EOS_WB_ASSERT(_page + size <= max_pages, wasm_bad_alloc, "exceeded max number of pages");
+         mprotect(_raw + (page_size * _page), (page_size * size), PROT_READ | PROT_WRITE);
          T* ptr    = (T*)_previous;
-         _previous = (raw + (page_size * page));
-         page += size;
+         _previous = (_raw + (page_size * _page));
+         _page += size;
          return ptr;
       }
 
-      void free() { 
-         munmap(raw, max_memory); 
-      }
+      void free() { munmap(_raw, max_memory); }
 
-      static outcome::result<growable_allocator&&> init(size_t sz) {
-         growable_allocator ga(sz);
-         if (LIKELY(_valid))
-            return std::move(ga);
+      static outcome::result<wasm_allocator> init() {
+         wasm_allocator wa;
+         if (LIKELY(wa._valid))
+            return std::move(wa);
          return system_errors::constructor_failure;
       }
 
-      wasm_allocator() {
-         //set_up_signals();
-         raw       = (char*)mmap(NULL, max_memory, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-         _previous = raw;
-         mprotect(raw, 1 * page_size, PROT_READ | PROT_WRITE);
-         page = 1;
-      }
       void reset() {
-         uint64_t size = page_size * page;
-         _previous     = raw;
-         memset(raw, 0, size);
-         page = 1;
-         mprotect(raw, size, PROT_NONE);
-         mprotect(raw, 1 * page_size, PROT_READ | PROT_WRITE);
+         uint64_t size = page_size * _page;
+         _previous     = _raw;
+         memset(_raw, 0, size);
+         _page = 1;
+         mprotect(_raw, size, PROT_NONE);
+         mprotect(_raw, 1 * page_size, PROT_READ | PROT_WRITE);
       }
       template <typename T>
       inline T* get_base_ptr() const {
-         return reinterpret_cast<T*>(raw);
+         return reinterpret_cast<T*>(_raw);
       }
-      inline int32_t get_current_page() const { return page; }
+      inline int32_t get_current_page() const { return _page; }
+   };
+
+   template <typename Allocator>
+   class maybe_allocator {
+    public:
+      inline maybe_allocator(outcome::result<Allocator>&& alloc) : _alloc(std::move(alloc)) {}
+      inline auto reset() { return _alloc.reset(); }
+      template <typename T>
+      inline auto alloc(size_t sz) {
+         return _alloc.template alloc<T>(sz);
+      }
+
+      inline auto       get_base_ptr() const { return _alloc.get_base_ptr(); }
+      inline auto       free() { return _alloc.free(); }
+      inline Allocator* get_allocator() { return _alloc ? &_alloc.value() : nullptr; }
+
+    private:
+      outcome::result<Allocator> _alloc;
    };
 }} // namespace eosio::vm

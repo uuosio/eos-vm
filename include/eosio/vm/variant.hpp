@@ -1,18 +1,15 @@
 #pragma once
 
-#include <algorithm>
 #include <eosio/vm/utils.hpp>
-#include <outcome.hpp>
+#include <eosio/vm/outcome.hpp>
+
+#include <algorithm>
 #include <iostream>
 #include <tuple>
 #include <type_traits>
 #include <variant>
 
 namespace eosio { namespace vm {
-
-// helpers for visit
-//template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-//template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 //forward declaration
 template <typename... Alternatives>
