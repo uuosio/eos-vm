@@ -152,6 +152,14 @@ namespace eosio { namespace vm {
                     "eosio::vm::variant can only accept 255 alternatives");
 
     public:
+      inline constexpr variant() = default;
+      inline constexpr variant(variant<Alternatives...>&& alt) : _which(alt._which) {
+         memcpy(_storage, alt._storage, alt._sizeof);
+      }
+      inline constexpr variant(const variant<Alternatives...>& alt) : _which(alt._which) {
+         memcpy(_storage, alt._storage, alt._sizeof);
+      }
+
       template <typename T>
       inline constexpr variant(T&& alt) {
          static_assert(detail::is_valid_alternative<std::decay_t<T>, Alternatives...>::value,
@@ -213,7 +221,7 @@ namespace eosio { namespace vm {
       static constexpr size_t _alignof = detail::max_alignof<Alternatives...>::value;
       uint16_t _which                  = 0;
       char     _storage[_sizeof];
-      // std::aligned_storage<_sizeof, _alignof> _storage;
+      //std::aligned_storage<_sizeof, _alignof> _storage;
    };
 
 }} // namespace eosio::vm

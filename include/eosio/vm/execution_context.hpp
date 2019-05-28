@@ -103,10 +103,10 @@ namespace eosio { namespace vm {
             stack_elem el;
             if (ret_type) {
                el = pop_operand();
-               EOS_WB_ASSERT(is_a<i32_const_t>(el) && ret_type == types::i32 ||
-                                   is_a<i64_const_t>(el) && ret_type == types::i64 ||
-                                   is_a<f32_const_t>(el) && ret_type == types::f32 ||
-                                   is_a<f64_const_t>(el) && ret_type == types::f64,
+               EOS_WB_ASSERT(el.is_a<i32_const_t>() && ret_type == types::i32 ||
+                                   el.is_a<i64_const_t>() && ret_type == types::i64 ||
+                                   el.is_a<f32_const_t>() && ret_type == types::f32 ||
+                                   el.is_a<f64_const_t>() && ret_type == types::f64,
                              wasm_interpreter_exception, "wrong return type");
             }
 
