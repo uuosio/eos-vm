@@ -10,6 +10,7 @@ GENERATE_ERROR_CATEGORY(parser_errors, "eos-vm parser errors")
 GENERATE_ERROR_CATEGORY(memory_errors, "eos-vm memory errors")
 GENERATE_ERROR_CATEGORY(system_errors, "eos-vm system errors")
 GENERATE_ERROR_CATEGORY(auxiliary_errors, "eos-vm auxiliary errors")
+GENERATE_ERROR_CATEGORY(eos_vm_success, "eos-vm success codes")
 
 // clang-format off
 #define PARSER_ERRORS(macro)                      \
@@ -29,12 +30,16 @@ GENERATE_ERROR_CATEGORY(auxiliary_errors, "eos-vm auxiliary errors")
 #define AUXILIARY_ERRORS(macro)      \
   macro(auxiliary_errors, checktime)
 
+#define EOS_VM_SUCCESS(macro)      \
+  macro(eos_vm_success, success)
+
 // clang-format on
 
 CREATE_ERROR_CODES(parser_errors, PARSER_ERRORS)
 CREATE_ERROR_CODES(memory_errors, MEMORY_ERRORS)
 CREATE_ERROR_CODES(system_errors, SYSTEM_ERRORS)
 CREATE_ERROR_CODES(auxiliary_errors, AUXILIARY_ERRORS)
+CREATE_ERROR_CODES(eos_vm_success, EOS_VM_SUCCESS)
 
 #define EOS_VM_ASSERT(expr, err_type)                                                                                  \
    if (!UNLIKELY(expr)) {                                                                                              \
