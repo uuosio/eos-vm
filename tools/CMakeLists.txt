@@ -23,6 +23,8 @@ target_link_libraries(vm_eos eos-vm eosiolib_native)
 
 set_target_properties(vm_eos  PROPERTIES LINK_FLAGS "${LINK_FLAGS}")
 
-
-add_executable(vm_eos2 ${CMAKE_CURRENT_SOURCE_DIR}/vm_eos.cpp)
-target_link_libraries(vm_eos2 eos-vm eosiolib_native)
+target_include_directories( vm_eos
+                              PRIVATE "${CMAKE_SOURCE_DIR}/contracts"
+                              PRIVATE "${CMAKE_BINARY_DIR}/contracts"
+                              PRIVATE ${CMAKE_SOURCE_DIR}/externals/magic_get/include
+                          )

@@ -1,4 +1,4 @@
 CODEABI_1.0 {
-    global: eos_vm_apply;
+    global: eos_vm_apply;eos_vm_init;
     local: *;
 };
