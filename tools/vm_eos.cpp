@@ -9,8 +9,6 @@
 using namespace eosio;
 using namespace eosio::vm;
 
-#include "hello.wasm.hpp"
-
 // example of host function as a raw C style function
 void eosio_assert(bool test, const char* msg) {
    if (!test) {
@@ -21,8 +19,8 @@ void eosio_assert(bool test, const char* msg) {
 
 void print_num(uint64_t n) { std::cout << "Number : " << n << "\n"; }
 
-void printdf(double value) {
-   printf("%f\n", value);
+extern "C" {
+   void printdf(double value);
 }
 
 struct example_host_methods {
@@ -39,14 +37,9 @@ static uint64_t get_microseconds() {
    return tv.tv_sec * 1000000LL + tv.tv_usec * 1LL ;
 }
 
-/**
- * Simple implementation of an interpreter using eos-vm.
- */
-int main(int argc, char** argv) {
-   if (argc < 4) {
-      std::cerr << "Please enter three numbers\n";
-      return -1;
-   }
+
+extern "C" int eos_vm_apply(uint64_t receiver, uint64_t code, uint64_t action, const unsigned char *wasm_code, size_t wasm_code_size) {
+
    // Thread specific `allocator` used for wasm linear memory.
    wasm_allocator wa;
    // Specific the backend with example_host_methods for host functions.
@@ -69,8 +62,9 @@ int main(int argc, char** argv) {
    watchdog<std::chrono::nanoseconds> wd;
    wd.set_duration(std::chrono::seconds(3));
    try {
+      wasm_code_ptr cp((unsigned char*)wasm_code, 0);
       // Instaniate a new backend using the wasm provided.
-      backend_t bkend(hello_wasm);
+      backend_t bkend(cp, wasm_code_size);
       wd.set_callback([&]() { bkend.get_context().exit(); });
 
       // Point the backend to the allocator you want it to use.
@@ -85,12 +79,16 @@ int main(int argc, char** argv) {
 
       // Execute apply.
       uint64_t start = get_microseconds();
-      bkend(&ehm, "env", "apply", (uint64_t)std::atoi(argv[1]), (uint64_t)std::atoi(argv[2]),
-            (uint64_t)std::atoi(argv[3]));
+      bkend(&ehm, "env", "apply", receiver, code, action);
       uint64_t end = get_microseconds();
 
       printf("+++++++duration: %d \n", end - start);
 
    } catch (...) { std::cerr << "eos-vm interpreter error\n"; }
+   return 0;
+}
+
+
+int main(int argc, char **argv) {
    return 0;
 }
