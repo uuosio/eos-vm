@@ -10,6 +10,10 @@
 #include <eosiolib/crypto.h>
 #include <eosiolib/chain.h>
 #include <eosiolib/db.h>
+#include <eosiolib/permission.h>
+#include <eosiolib/print.h>
+#include <eosiolib/privileged.h>
+#include <eosiolib/transaction.h>
 
 using namespace eosio;
 using namespace eosio::vm;
@@ -147,6 +151,46 @@ rhf_t::add<nullptr_t, &db_idx_long_double_find_secondary, wasm_allocator>("env",
 rhf_t::add<nullptr_t, &db_idx_long_double_lowerbound,  wasm_allocator>("env", "db_idx_long_double_lowerbound");
 rhf_t::add<nullptr_t, &db_idx_long_double_upperbound,  wasm_allocator>("env", "db_idx_long_double_upperbound");
 rhf_t::add<nullptr_t, &db_idx_long_double_end,         wasm_allocator>("env", "db_idx_long_double_end");
+
+//eosiolib/permission.h
+rhf_t::add<nullptr_t, &check_transaction_authorization,wasm_allocator>("env", "check_transaction_authorization");
+rhf_t::add<nullptr_t, &get_permission_last_used,       wasm_allocator>("env", "get_permission_last_used");
+rhf_t::add<nullptr_t, &get_account_creation_time,      wasm_allocator>("env", "get_account_creation_time");
+
+//eosiolib/print.h
+rhf_t::add<nullptr_t, & prints,        wasm_allocator>("env", "prints");
+rhf_t::add<nullptr_t, & prints_l,      wasm_allocator>("env", "prints_l");
+rhf_t::add<nullptr_t, & printi,        wasm_allocator>("env", "printi");
+rhf_t::add<nullptr_t, & printui,       wasm_allocator>("env", "printui");
+rhf_t::add<nullptr_t, & printi128,     wasm_allocator>("env", "printi128");
+rhf_t::add<nullptr_t, & printui128,    wasm_allocator>("env", "printui128");
+rhf_t::add<nullptr_t, & printsf,       wasm_allocator>("env", "printsf");
+rhf_t::add<nullptr_t, & printdf,       wasm_allocator>("env", "printdf");
+rhf_t::add<nullptr_t, & printqf,       wasm_allocator>("env", "printqf");
+rhf_t::add<nullptr_t, & printn,        wasm_allocator>("env", "printn");
+rhf_t::add<nullptr_t, & printhex,      wasm_allocator>("env", "printhex");
+
+//eosiolib/privileged.h
+rhf_t::add<nullptr_t, &get_resource_limits,           wasm_allocator>("env", "get_resource_limits");
+rhf_t::add<nullptr_t, &set_resource_limits,           wasm_allocator>("env", "set_resource_limits");
+rhf_t::add<nullptr_t, &set_proposed_producers,        wasm_allocator>("env", "set_proposed_producers");
+//rhf_t::add<nullptr_t, &set_active_producers,          wasm_allocator>("env", "set_active_producers");
+rhf_t::add<nullptr_t, &is_privileged,                 wasm_allocator>("env", "is_privileged");
+rhf_t::add<nullptr_t, &set_privileged,                wasm_allocator>("env", "set_privileged");
+rhf_t::add<nullptr_t, &set_blockchain_parameters_packed,      wasm_allocator>("env", "set_blockchain_parameters_packed");
+rhf_t::add<nullptr_t, &get_blockchain_parameters_packed,      wasm_allocator>("env", "get_blockchain_parameters_packed");
+rhf_t::add<nullptr_t, &activate_feature,              wasm_allocator>("env", "activate_feature");
+
+//eosiolib/transaction.h
+rhf_t::add<nullptr_t, &send_deferred,                 wasm_allocator>("env", "send_deferred");
+rhf_t::add<nullptr_t, &cancel_deferred,               wasm_allocator>("env", "cancel_deferred");
+rhf_t::add<nullptr_t, &read_transaction,              wasm_allocator>("env", "read_transaction");
+rhf_t::add<nullptr_t, &transaction_size,              wasm_allocator>("env", "transaction_size");
+rhf_t::add<nullptr_t, &tapos_block_num,               wasm_allocator>("env", "tapos_block_num");
+rhf_t::add<nullptr_t, &tapos_block_prefix,            wasm_allocator>("env", "tapos_block_prefix");
+rhf_t::add<nullptr_t, &expiration,                    wasm_allocator>("env", "expiration");
+rhf_t::add<nullptr_t, &get_action,                    wasm_allocator>("env", "get_action");
+rhf_t::add<nullptr_t, &get_context_free_data,         wasm_allocator>("env", "get_context_free_data");
 
 }
 
