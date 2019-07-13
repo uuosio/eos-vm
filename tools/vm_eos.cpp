@@ -7,6 +7,9 @@
 #include <iostream>
 #include <eosiolib/action.h>
 #include <eosiolib/system.h>
+#include <eosiolib/crypto.h>
+#include <eosiolib/chain.h>
+#include <eosiolib/db.h>
 
 using namespace eosio;
 using namespace eosio::vm;
@@ -48,6 +51,7 @@ extern "C" void eos_vm_init() {
    rhf_t::add<nullptr_t, &example_host_methods::memset, wasm_allocator>("env", "memset");
 
 
+//eosiolib/action.h
    rhf_t::add<nullptr_t, &read_action_data,           wasm_allocator>("env", "read_action_data");
    rhf_t::add<nullptr_t, &action_data_size,           wasm_allocator>("env", "action_data_size");
    rhf_t::add<nullptr_t, &require_recipient,          wasm_allocator>("env", "require_recipient");
@@ -61,7 +65,89 @@ extern "C" void eos_vm_init() {
    rhf_t::add<nullptr_t, &publication_time,           wasm_allocator>("env", "publication_time");
    rhf_t::add<nullptr_t, &current_receiver,           wasm_allocator>("env", "current_receiver");
 
-   rhf_t::add<nullptr_t, &eosio_assert,               wasm_allocator>("env", "eosio_assert");
+//eosiolib/system.h
+   rhf_t::add<nullptr_t, &eosio_assert_message,       wasm_allocator>("env", "eosio_assert_message");
+   rhf_t::add<nullptr_t, &eosio_assert_code,          wasm_allocator>("env", "eosio_assert_code");
+   rhf_t::add<nullptr_t, &eosio_exit,                 wasm_allocator>("env", "eosio_exit");
+   rhf_t::add<nullptr_t, &current_time,               wasm_allocator>("env", "current_time");
+
+//eosiolib/chain.h
+   rhf_t::add<nullptr_t, &get_active_producers,       wasm_allocator>("env", "get_active_producers");
+
+//eosiolib/crypto.h
+   rhf_t::add<nullptr_t, &assert_sha256,              wasm_allocator>("env", "assert_sha256");
+   rhf_t::add<nullptr_t, &assert_sha1,                wasm_allocator>("env", "assert_sha1");
+   rhf_t::add<nullptr_t, &assert_sha512,              wasm_allocator>("env", "assert_sha512");
+   rhf_t::add<nullptr_t, &assert_ripemd160,           wasm_allocator>("env", "assert_ripemd160");
+   rhf_t::add<nullptr_t, &sha256,                     wasm_allocator>("env", "sha256");
+   rhf_t::add<nullptr_t, &sha1,                       wasm_allocator>("env", "sha1");
+   rhf_t::add<nullptr_t, &sha512,                     wasm_allocator>("env", "sha512");
+   rhf_t::add<nullptr_t, &ripemd160,                  wasm_allocator>("env", "ripemd160");
+   rhf_t::add<nullptr_t, &recover_key,                wasm_allocator>("env", "recover_key");
+   rhf_t::add<nullptr_t, &assert_recover_key,         wasm_allocator>("env", "assert_recover_key");
+
+//eosiolib/db.h
+rhf_t::add<nullptr_t, &db_store_i64,                  wasm_allocator>("env", "db_store_i64");
+rhf_t::add<nullptr_t, &db_update_i64,                 wasm_allocator>("env", "db_update_i64");
+rhf_t::add<nullptr_t, &db_remove_i64,                 wasm_allocator>("env", "db_remove_i64");
+rhf_t::add<nullptr_t, &db_get_i64,                    wasm_allocator>("env", "db_get_i64");
+rhf_t::add<nullptr_t, &db_next_i64,                   wasm_allocator>("env", "db_next_i64");
+rhf_t::add<nullptr_t, &db_previous_i64,               wasm_allocator>("env", "db_previous_i64");
+rhf_t::add<nullptr_t, &db_find_i64,                   wasm_allocator>("env", "db_find_i64");
+rhf_t::add<nullptr_t, &db_lowerbound_i64,             wasm_allocator>("env", "db_lowerbound_i64");
+rhf_t::add<nullptr_t, &db_upperbound_i64,             wasm_allocator>("env", "db_upperbound_i64");
+rhf_t::add<nullptr_t, &db_end_i64,                    wasm_allocator>("env", "db_end_i64");
+rhf_t::add<nullptr_t, &db_idx64_store,                wasm_allocator>("env", "db_idx64_store");
+rhf_t::add<nullptr_t, &db_idx64_update,               wasm_allocator>("env", "db_idx64_update");
+rhf_t::add<nullptr_t, &db_idx64_remove,               wasm_allocator>("env", "db_idx64_remove");
+rhf_t::add<nullptr_t, &db_idx64_next,                 wasm_allocator>("env", "db_idx64_next");
+rhf_t::add<nullptr_t, &db_idx64_previous,             wasm_allocator>("env", "db_idx64_previous");
+rhf_t::add<nullptr_t, &db_idx64_find_primary,         wasm_allocator>("env", "db_idx64_find_primary");
+rhf_t::add<nullptr_t, &db_idx64_find_secondary,       wasm_allocator>("env", "db_idx64_find_secondary");
+rhf_t::add<nullptr_t, &db_idx64_lowerbound,           wasm_allocator>("env", "db_idx64_lowerbound");
+rhf_t::add<nullptr_t, &db_idx64_upperbound,           wasm_allocator>("env", "db_idx64_upperbound");
+rhf_t::add<nullptr_t, &db_idx64_end,                  wasm_allocator>("env", "db_idx64_end");
+rhf_t::add<nullptr_t, &db_idx128_store,               wasm_allocator>("env", "db_idx128_store");
+rhf_t::add<nullptr_t, &db_idx128_update,              wasm_allocator>("env", "db_idx128_update");
+rhf_t::add<nullptr_t, &db_idx128_remove,              wasm_allocator>("env", "db_idx128_remove");
+rhf_t::add<nullptr_t, &db_idx128_next,                wasm_allocator>("env", "db_idx128_next");
+rhf_t::add<nullptr_t, &db_idx128_previous,            wasm_allocator>("env", "db_idx128_previous");
+rhf_t::add<nullptr_t, &db_idx128_find_primary,        wasm_allocator>("env", "db_idx128_find_primary");
+rhf_t::add<nullptr_t, &db_idx128_find_secondary,      wasm_allocator>("env", "db_idx128_find_secondary");
+rhf_t::add<nullptr_t, &db_idx128_lowerbound,          wasm_allocator>("env", "db_idx128_lowerbound");
+rhf_t::add<nullptr_t, &db_idx128_upperbound,          wasm_allocator>("env", "db_idx128_upperbound");
+rhf_t::add<nullptr_t, &db_idx128_end,                 wasm_allocator>("env", "db_idx128_end");
+rhf_t::add<nullptr_t, &db_idx256_store,               wasm_allocator>("env", "db_idx256_store");
+rhf_t::add<nullptr_t, &db_idx256_update,              wasm_allocator>("env", "db_idx256_update");
+rhf_t::add<nullptr_t, &db_idx256_remove,              wasm_allocator>("env", "db_idx256_remove");
+rhf_t::add<nullptr_t, &db_idx256_next,                wasm_allocator>("env", "db_idx256_next");
+rhf_t::add<nullptr_t, &db_idx256_previous,            wasm_allocator>("env", "db_idx256_previous");
+rhf_t::add<nullptr_t, &db_idx256_find_primary,        wasm_allocator>("env", "db_idx256_find_primary");
+rhf_t::add<nullptr_t, &db_idx256_find_secondary,      wasm_allocator>("env", "db_idx256_find_secondary");
+rhf_t::add<nullptr_t, &db_idx256_lowerbound,          wasm_allocator>("env", "db_idx256_lowerbound");
+rhf_t::add<nullptr_t, &db_idx256_upperbound,          wasm_allocator>("env", "db_idx256_upperbound");
+rhf_t::add<nullptr_t, &db_idx256_end,                 wasm_allocator>("env", "db_idx256_end");
+rhf_t::add<nullptr_t, &db_idx_double_store,           wasm_allocator>("env", "db_idx_double_store");
+rhf_t::add<nullptr_t, &db_idx_double_update,          wasm_allocator>("env", "db_idx_double_update");
+rhf_t::add<nullptr_t, &db_idx_double_remove,          wasm_allocator>("env", "db_idx_double_remove");
+rhf_t::add<nullptr_t, &db_idx_double_next,            wasm_allocator>("env", "db_idx_double_next");
+rhf_t::add<nullptr_t, &db_idx_double_previous,        wasm_allocator>("env", "db_idx_double_previous");
+rhf_t::add<nullptr_t, &db_idx_double_find_primary,    wasm_allocator>("env", "db_idx_double_find_primary");
+rhf_t::add<nullptr_t, &db_idx_double_find_secondary,  wasm_allocator>("env", "db_idx_double_find_secondary");
+rhf_t::add<nullptr_t, &db_idx_double_lowerbound,      wasm_allocator>("env", "db_idx_double_lowerbound");
+rhf_t::add<nullptr_t, &db_idx_double_upperbound,      wasm_allocator>("env", "db_idx_double_upperbound");
+rhf_t::add<nullptr_t, &db_idx_double_end,             wasm_allocator>("env", "db_idx_double_end");
+rhf_t::add<nullptr_t, &db_idx_long_double_store,      wasm_allocator>("env", "db_idx_long_double_store");
+rhf_t::add<nullptr_t, &db_idx_long_double_update,     wasm_allocator>("env", "db_idx_long_double_update");
+rhf_t::add<nullptr_t, &db_idx_long_double_remove,     wasm_allocator>("env", "db_idx_long_double_remove");
+rhf_t::add<nullptr_t, &db_idx_long_double_next,       wasm_allocator>("env", "db_idx_long_double_next");
+rhf_t::add<nullptr_t, &db_idx_long_double_previous,   wasm_allocator>("env", "db_idx_long_double_previous");
+rhf_t::add<nullptr_t, &db_idx_long_double_find_primary,   wasm_allocator>("env", "db_idx_long_double_find_primary");
+rhf_t::add<nullptr_t, &db_idx_long_double_find_secondary, wasm_allocator>("env", "db_idx_long_double_find_secondary");
+rhf_t::add<nullptr_t, &db_idx_long_double_lowerbound,  wasm_allocator>("env", "db_idx_long_double_lowerbound");
+rhf_t::add<nullptr_t, &db_idx_long_double_upperbound,  wasm_allocator>("env", "db_idx_long_double_upperbound");
+rhf_t::add<nullptr_t, &db_idx_long_double_end,         wasm_allocator>("env", "db_idx_long_double_end");
+
 }
 
 extern "C" int eos_vm_apply(uint64_t receiver, uint64_t code, uint64_t action, const unsigned char *wasm_code, size_t wasm_code_size) {
