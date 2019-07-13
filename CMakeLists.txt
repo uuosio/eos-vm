@@ -30,7 +30,7 @@ link_libraries(Threads::Threads)
 # ##################################################################################################
 include(CMakeDependentOption)
 option(ENABLE_SOFTFLOAT "enable the backend to use deterministic software floating point operations"
-	OFF)
+	ON)
 option(ENABLE_INSTALL "enable this library to be installed" ON)
 option(ENABLE_MEMORY_OPS_ALIGNMENT "enable the backend to obey alignment hints" OFF)
 option(ENABLE_TOOLS "enable building of tools" ON)
@@ -52,13 +52,11 @@ target_include_directories(eos-vm
 # ##################################################################################################
 # Option specific build configurations.
 # ##################################################################################################
-if(ENABLE_SOFTFLOAT)
-   if(NOT TARGET softfloat)
-      add_subdirectory(external)
-   endif()
-   add_definitions(-DEOS_VM_SOFTFLOAT)
-   target_link_libraries(eos-vm INTERFACE softfloat)
+if(NOT TARGET softfloat)
+   add_subdirectory(external)
 endif()
+add_definitions(-DEOS_VM_SOFTFLOAT)
+target_link_libraries(eos-vm INTERFACE softfloat)
 
 if(NOT USE_EXISTING_BOOST)
    add_definitions(-DEOS_VM_USE_EXTERNAL_OUTCOME)
