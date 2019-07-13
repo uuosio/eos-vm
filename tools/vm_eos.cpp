@@ -70,6 +70,7 @@ extern "C" void eos_vm_init() {
    rhf_t::add<nullptr_t, &current_receiver,           wasm_allocator>("env", "current_receiver");
 
 //eosiolib/system.h
+   rhf_t::add<nullptr_t, &eosio_assert,               wasm_allocator>("env", "eosio_assert");
    rhf_t::add<nullptr_t, &eosio_assert_message,       wasm_allocator>("env", "eosio_assert_message");
    rhf_t::add<nullptr_t, &eosio_assert_code,          wasm_allocator>("env", "eosio_assert_code");
    rhf_t::add<nullptr_t, &eosio_exit,                 wasm_allocator>("env", "eosio_exit");
