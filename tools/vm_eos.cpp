@@ -20,15 +20,14 @@ using namespace eosio::vm;
 
 void print_num(uint64_t n) { std::cout << "Number : " << n << "\n"; }
 
-extern "C" {
-   void printdf(double value);
-}
 
 struct example_host_methods {
    // example of a host "method"
    void print_name(const char* nm) { std::cout << "Name : " << nm << " " << field << "\n"; }
    // example of another type of host function
    static void* memset(void* ptr, int x, size_t n) { return ::memset(ptr, x, n); }
+   static void* memcpy(void* dst, void *src, size_t n) { return ::memcpy(dst, src, n); }
+   static void* memmove(void* dst, void *src, size_t n) { return ::memmove(dst, src, n); }
    std::string  field = "";
 };
 
@@ -44,16 +43,14 @@ extern "C" void eos_vm_init() {
    // register print_num
    rhf_t::add<nullptr_t, &print_num, wasm_allocator>("env", "print_num");
 
-   // register print_num
-   rhf_t::add<nullptr_t, &printdf, wasm_allocator>("env", "printdf");
-
    // register eosio_assert
 //   rhf_t::add<nullptr_t, &eosio_assert, wasm_allocator>("env", "eosio_assert");
    // register print_name
    rhf_t::add<example_host_methods, &example_host_methods::print_name, wasm_allocator>("env", "print_name");
    // finally register memset
    rhf_t::add<nullptr_t, &example_host_methods::memset, wasm_allocator>("env", "memset");
-
+   rhf_t::add<nullptr_t, &example_host_methods::memcpy, wasm_allocator>("env", "memcpy");
+   rhf_t::add<nullptr_t, &example_host_methods::memmove, wasm_allocator>("env", "memmove");
 
 //eosiolib/action.h
    rhf_t::add<nullptr_t, &read_action_data,           wasm_allocator>("env", "read_action_data");
@@ -70,6 +67,8 @@ extern "C" void eos_vm_init() {
    rhf_t::add<nullptr_t, &current_receiver,           wasm_allocator>("env", "current_receiver");
 
 //eosiolib/system.h
+
+   rhf_t::add<nullptr_t, &eosio_abort,               wasm_allocator>("env", "abort");
    rhf_t::add<nullptr_t, &eosio_assert,               wasm_allocator>("env", "eosio_assert");
    rhf_t::add<nullptr_t, &eosio_assert_message,       wasm_allocator>("env", "eosio_assert_message");
    rhf_t::add<nullptr_t, &eosio_assert_code,          wasm_allocator>("env", "eosio_assert_code");
@@ -227,7 +226,12 @@ extern "C" int eos_vm_apply(uint64_t receiver, uint64_t code, uint64_t action, c
 
       printf("+++++++duration: %d \n", end - start);
 
-   } catch (...) { std::cerr << "eos-vm interpreter error\n"; }
+   } catch (eosio::vm::exception& e) {
+      std::cerr << "eos-vm interpreter error\n"; 
+      std::cerr << e.what() <<std::endl; 
+      std::cerr << e.detail() <<std::endl; 
+      throw;
+   }
    return 0;
 }
 
